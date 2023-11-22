@@ -8,13 +8,15 @@ def string2bin(s):
 	return res
 
 # Binary to string conversion
-def bin2string(binary):
-	s = ""
-	for i in range(0, len(binary), 8):
-		temp_data = binary[i:i + 8]
-		num = int(temp_data, 2)
-		s = s + chr(num)
-	return s 
+def bin2string(binary_str):
+    text = ""
+    for i in range(0, len(binary_str), 8):
+        byte = binary_str[i:i + 8]
+        byte = '0' * (8 - len(byte)) + byte
+        decimal = int(byte, 2)
+        character = chr(decimal)
+        text += character
+    return text
 
 # Hexadecimal to binary conversion
 def hex2bin(s):
@@ -221,25 +223,25 @@ def encrypt(pt, key):
 	rkb = []
 	rk = []
 	rkb, rk = generate_round_keys(key)
-	print("string ke bin ", pt)
+	# prit print("string ke bin ", pt)
 
 	# Initial Permutation
 	pt = permute(pt, initial_perm, 64)
-	print("Hasil permutasi ", pt)
-	print("\nAfter initial permutation", bin2hex(pt))
+	# prit print("Hasil permutasi ", pt)
+	# prit print("\nAfter initial permutation", bin2hex(pt))
 
 	# Splitting
 	left = pt[0:32]
 	right = pt[32:64]
-	print(left, " ", right)
+	# prit print(left, " ", right)
 	for i in range(0, 16):
 		# Expansion D-box: Expanding the 32 bits data into 48 bits
 		right_expanded = permute(right, exp_d, 48)
-		print("Hasil ekspansi 32 ke 48 ", right_expanded)
+		# prit print("Hasil ekspansi 32 ke 48 ", right_expanded)
 
 		# XOR RoundKey[i] and right_expanded
 		xor_x = xor(right_expanded, rkb[i])
-		print("Hasil xor dengan rkb ", xor_x)
+		# prit print("Hasil xor dengan rkb ", xor_x)
 
 		# S-boxex: substituting the value from s-box table by calculating row and column
 		sbox_str = ""
@@ -249,11 +251,11 @@ def encrypt(pt, key):
 				int(xor_x[j * 6 + 1] + xor_x[j * 6 + 2] + xor_x[j * 6 + 3] + xor_x[j * 6 + 4]))
 			val = sbox[j][row][col]
 			sbox_str = sbox_str + dec2bin(val)
-			print(sbox_str)
+			# prit print(sbox_str)
 
 		# Straight D-box: After substituting rearranging the bits
 		sbox_str = permute(sbox_str, per, 32)
-		print("Hasil permutasi 32 :\n", sbox_str)
+		# prit print("Hasil permutasi 32 :\n", sbox_str)
 
 		# XOR left and sbox_str
 		result = xor(left, sbox_str)
@@ -262,16 +264,16 @@ def encrypt(pt, key):
 		# Swapper
 		if(i != 15):
 			left, right = right, left
-		print("Round ", i + 1, " ", bin2hex(left),
-			" ", bin2hex(right), " ", rk[i])
+		# prit print("Round ", i + 1, " ", bin2hex(left),
+		#	" ", bin2hex(right), " ", rk[i])
 
 	# Combination
 	combine = left + right
-	print(combine)
+	# prit print(combine)
 
 	# Final permutation: final rearranging of bits to get cipher text
 	cipher_text = permute(combine, final_perm, 64)
-	print("Chipher text bin: \n", cipher_text)
+	# prit print("Chipher text bin: \n", cipher_text)
 	return cipher_text
 
 def decrypt(ct, key):
@@ -279,11 +281,11 @@ def decrypt(ct, key):
 
 	rkb = []
 	rk = []
-	rkb, rk = generate_round_keys(key)
+	rkb, rk = generate_round_keys_decrypt(key)
 
 	# Initial Permutation
 	ct = permute(ct, initial_perm, 64)
-	print("\nAfter initial permutation", bin2hex(ct))
+	# prit print("\nAfter initial permutation", bin2hex(ct))
 
 	# Splitting
 	left = ct[0:32]
@@ -314,14 +316,16 @@ def decrypt(ct, key):
 		# Swapper
 		if(i != 15):
 			left, right = right, left
-		print("Round ", i + 1, " ", bin2hex(left),
-			" ", bin2hex(right), " ", rk[i])
+		# prit print("Round ", i + 1, " ", bin2hex(left),
+		#	" ", bin2hex(right), " ", rk[i])
 
 	# Combination
 	combine = left + right
 
 	# Final permutation: final rearranging of bits to get plain text
 	plain_text = permute(combine, final_perm, 64)
+	print(plain_text)
+	print(bin2string(plain_text))
 	return plain_text
 
 
@@ -355,6 +359,37 @@ def generate_round_keys(key):
         rk.append(bin2hex(round_key))
 
     return rkb, rk
+
+def generate_round_keys_decrypt(key):
+    # --hex to binary
+    key = hex2bin(key)
+
+    # getting 56 bit key from 64 bit using the parity bits
+    key = permute(key, keyp, 56)
+
+    # Splitting
+    left = key[0:28] # rkb for RoundKeys in binary
+    right = key[28:56] # rk for RoundKeys in hexadecimal
+
+    rkb = []  # rkb untuk RoundKeys dalam biner
+    rk = []  # rk for RoundKeys in hexadecimal
+    for i in range(0, 16):
+	    # Shifting the bits by nth shifts by checking from shift table
+        left = shift_left(left, shift_table[i])
+        right = shift_left(right, shift_table[i])
+
+        # Combination of left and right string
+        combine_str = left + right
+
+        # Compression of key from 56 to 48 bits
+        round_key = permute(combine_str, key_comp, 48)
+
+        rkb.append(round_key)
+        rk.append(bin2hex(round_key))
+    rkb_rev = rkb[::-1]
+    rk_rev = rk[::-1]
+
+    return rkb_rev, rk_rev
 
 def sending():
     print("\nSending ",end = "")

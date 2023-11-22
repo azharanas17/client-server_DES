@@ -5,7 +5,7 @@ import des
 
 def Main():
     host = "127.0.0.1"
-    port = 5002
+    port = 5001
     #necessary to initiate the server
     mySocket = socket.socket()
     mySocket.bind((host,port))
@@ -17,16 +17,17 @@ def Main():
     conn, addr = mySocket.accept()
     print ("Connection from: " + str(addr))
 
+    key = "0A1B2C3D4E5F6071"
     while True:
             #receiving the response from the other user
             data = conn.recv(1024).decode()
             print("Received from client = " + data)
             #decrypting the other user's message
-            key = "0A1B2C3D4E5F6071"
+            
             decryptedMessage = des.decrypt(data, key)
             if not data:
                     break
-            print ("Decrypted Message = " + decryptedMessage)
+            print ("Decrypted Message = " + des.bin2string(decryptedMessage))
             print("\n")
             message = input("Enter the message you want to encrypt -> ")
             #encrypting the message using DES

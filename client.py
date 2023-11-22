@@ -6,7 +6,7 @@ from time import sleep
 # this will serve as the "client" for our implementation
 def Main():
         host = "127.0.0.1"
-        port = 5002
+        port = 5001
         #necessary to connect to the server
         mySocket = socket.socket()
         mySocket.connect((host,port))
@@ -34,7 +34,7 @@ def Main():
                 decryptedMessage = des.decrypt(data, key)
                 if not data:
                         break
-                print ("Decrypted Message = " + decryptedMessage)
+                print ("Decrypted Message = " + des.bin2string(decryptedMessage))
                 print("\n")
                 #setting up the message all over again....
                 message = input("Enter the message you want to encrypt -> ")
